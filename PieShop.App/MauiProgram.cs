@@ -40,6 +40,8 @@ namespace PieShop.App
                     Timeout = TimeSpan.FromSeconds(10)
                 };
             });
+            builder.Services.AddSingleton<IDialogService, DialogService>();
+            builder.Services.AddSingleton<IMediaPicker>(MediaPicker.Default);
 
 
 #if DEBUG

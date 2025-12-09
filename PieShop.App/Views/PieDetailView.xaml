@@ -68,6 +68,21 @@
                    Grid.Column="1"
                    IsToggled="{Binding SelectedPie.InStock, Mode=TwoWay}"
                    ></Switch>
+            
+            <Image
+                HeightRequest="200"
+                Aspect="AspectFill"
+                Source="{Binding ImagePreview}" />
+            
+            <HorizontalStackLayout Spacing="8">
+                <Button
+                    Text="Kies foto"
+                    Command="{Binding PickPhotoCommand}" />
+
+                <Button
+                    Text="Foto nemen"
+                    Command="{Binding TakePhotoCommand}" />
+            </HorizontalStackLayout>
             <Button x:Name="SavePieButton" 
                     Command="{Binding SaveCommand}"
                     Text="Save Pie" 

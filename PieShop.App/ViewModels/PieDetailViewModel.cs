@@ -13,17 +13,30 @@ namespace PieShop.App.ViewModels
         [ObservableProperty]
         private Pie selectedPie = new Pie();
 
+        [ObservableProperty]
+        private ImageSource imagePreview;
+
         private IPieRepository _repository;
+        private byte[] _photoBytes;
         private readonly INavigationService _navigation;
         private readonly IMessenger _messenger;
+        private readonly IMediaPicker _mediaPicker;
+        private readonly IDialogService _dialog;
 
         // public ICommand SaveCommand { get; }
 
-        public PieDetailViewModel(IPieRepository pieRepository, INavigationService navigation, IMessenger messenger) 
+        public PieDetailViewModel(
+            IPieRepository pieRepository, 
+            INavigationService navigation, 
+            IMessenger messenger,
+            IMediaPicker mediaPicker,
+            IDialogService dialog) 
         {
             _repository = pieRepository;
             _navigation = navigation;
             _messenger = messenger;
+            _mediaPicker = mediaPicker;
+            _dialog = dialog;
         }
 
         [RelayCommand]
@@ -41,6 +54,76 @@ namespace PieShop.App.ViewModels
             }
 
             await _navigation.GoBackAsync();
+        }
+
+        [RelayCommand]
+        private async Task TakePhotoAsync()
+        {
+            try
+            {
+                if (!_mediaPicker.IsCaptureSupported)
+                {
+                    await _dialog.ShowAlertAsync("Camera", "Foto nemen wordt niet ondersteund op dit toestel.", "OK");
+                    return;
+                }
+
+                FileResult? photo = await _mediaPicker.CapturePhotoAsync();
+
+                if (photo == null)
+                {
+                    return;
+                }
+
+                using (Stream sourceStream = await photo.OpenReadAsync())
+                {
+                    using (MemoryStream memoryStream = new MemoryStream())
+                    {
+                        await sourceStream.CopyToAsync(memoryStream);
+                        _photoBytes = memoryStream.ToArray();
+                    }
+
+                    ImagePreview = ImageSource.FromStream(() =>
+                    {
+                        return new MemoryStream(_photoBytes);
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                await _dialog.ShowAlertAsync("Fout", $"Foto nemen is mislukt: {ex.Message}", "OK");
+            }
+        }
+
+        [RelayCommand]
+        private async Task PickPhotoAsync()
+        {
+            try
+            {
+                FileResult? photo = await _mediaPicker.PickPhotoAsync();
+
+                if (photo == null)
+                {
+                    return; 
+                }
+
+                using (Stream sourceStream = await photo.OpenReadAsync())
+                {
+                    using (MemoryStream memoryStream = new MemoryStream())
+                    {
+                        await sourceStream.CopyToAsync(memoryStream);
+                        _photoBytes = memoryStream.ToArray();
+                    }
+
+                    ImagePreview = ImageSource.FromStream(() =>
+                    {
+                        return new MemoryStream(_photoBytes);
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                await _dialog.ShowAlertAsync("Fout", $"Foto kiezen is mislukt: {ex.Message}", "OK");
+            }
         }
     }
 }
