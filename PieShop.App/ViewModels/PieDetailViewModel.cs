@@ -16,14 +16,20 @@ namespace PieShop.App.ViewModels
         private IPieRepository _repository;
         private readonly INavigationService _navigation;
         private readonly IMessenger _messenger;
+        private readonly IDialogService _dialog;
 
         // public ICommand SaveCommand { get; }
 
-        public PieDetailViewModel(IPieRepository pieRepository, INavigationService navigation, IMessenger messenger) 
+        public PieDetailViewModel(
+            IPieRepository pieRepository, 
+            INavigationService navigation, 
+            IMessenger messenger,
+            IDialogService dialog)
         {
             _repository = pieRepository;
             _navigation = navigation;
             _messenger = messenger;
+            _dialog = dialog;
         }
 
         [RelayCommand]
