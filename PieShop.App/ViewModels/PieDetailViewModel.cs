@@ -42,19 +42,33 @@ namespace PieShop.App.ViewModels
         [RelayCommand]
         private async Task OnSave()
         {
-            if (SelectedPie.Id == Guid.Empty)
+            try
             {
-                await _repository.AddPie(SelectedPie);
-                await _repository.Upload
-                _messenger.Send(new PieCreatedMessage(SelectedPie));
-            }
-            else
-            {
-                await _repository.UpdatePie(SelectedPie);
-                _messenger.Send(new PieUpdatedMessage(SelectedPie));
-            }
+                if (SelectedPie.Id == Guid.Empty)
+                {
+                    await _repository.AddPie(SelectedPie);
+                    if (_photoBytes is not null && _photoBytes.Length > 0)
+                    {
+                        SelectedPie.ImageUrl = await _repository.UploadImage(SelectedPie.Id, _photoBytes);
+                    }
+                    _messenger.Send(new PieCreatedMessage(SelectedPie));
+                }
+                else
+                {
+                    await _repository.UpdatePie(SelectedPie);
+                    if (_photoBytes is not null && _photoBytes.Length > 0)
+                    {
+                        SelectedPie.ImageUrl = await _repository.UploadImage(SelectedPie.Id, _photoBytes);
+                    }
+                    _messenger.Send(new PieUpdatedMessage(SelectedPie));
+                }
 
-            await _navigation.GoBackAsync();
+                await _navigation.GoBackAsync();
+            }
+            catch (Exception ex)
+            {
+                await _dialog.ShowAlertAsync("Fout", ex.Message, "Ok");
+            }
         }
 
         [RelayCommand]

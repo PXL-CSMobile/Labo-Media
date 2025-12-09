@@ -13,11 +13,13 @@ namespace PieShop.API.Controllers
     {
         private readonly IPieRepository _repository;
         private readonly IMapper _mapper;
+        private readonly IWebHostEnvironment _environment;
 
-        public PiesController(IPieRepository repository, IMapper mapper)
+        public PiesController(IPieRepository repository, IMapper mapper, IWebHostEnvironment environment)
         {
             _repository = repository;
             _mapper = mapper;
+            _environment = environment;
         }
 
         [HttpGet]
@@ -80,6 +82,49 @@ namespace PieShop.API.Controllers
             await _repository.DeletePieAsync(pie);
 
             return NoContent();
+        }
+
+        [HttpPost("{id:Guid}/image")]
+        public async Task<IActionResult> UploadImage(Guid id, IFormFile image)
+        {
+            if (image == null || image.Length == 0)
+            {
+                return BadRequest("Image is required.");
+            }
+
+            Pie? pie = await _repository.GetPieAsync(id);
+
+            if (pie == null)
+            {
+                throw new KeyNotFoundException($"Pie with id {id} does not exist.");
+            }
+
+            using (MemoryStream ms = new MemoryStream())
+            {
+                await image.CopyToAsync(ms);
+                byte[] bytes = ms.ToArray();
+
+                string ext = Path.GetExtension(image.FileName);
+
+                // 1. Bestandsnaam genereren
+                string fileName = $"{Guid.NewGuid()}.{ext.TrimStart('.')}";
+
+                string imagesFolder = Path.Combine(_environment.WebRootPath, "images", "pies");
+                // Zorg dat de folder bestaat
+                Directory.CreateDirectory(imagesFolder);
+
+                string filePath = Path.Combine(imagesFolder, fileName);
+
+                // 2. File opslaan
+                await System.IO.File.WriteAllBytesAsync(filePath, bytes);
+
+                // 3. URL opslaan in database (voor de client)
+                pie.ImageUrl = $"{Request.Scheme}://{Request.Host}/images/pies/{fileName}";
+                await _repository.UpdatePieAsync(pie);
+
+                return Ok(pie.ImageUrl);
+            }
+
         }
     }
 }

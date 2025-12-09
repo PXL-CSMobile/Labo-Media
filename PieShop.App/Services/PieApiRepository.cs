@@ -123,7 +123,7 @@ namespace PieShop.App.Services
             }
         }
 
-        public async Task UploadImage(int pieId, byte[] imageBytes)
+        public async Task<string> UploadImage(Guid pieId, byte[] imageBytes)
         {
             using (MultipartFormDataContent form = new MultipartFormDataContent())
             {
@@ -132,8 +132,10 @@ namespace PieShop.App.Services
 
                 form.Add(imageContent, "image", "pie.jpg");
 
-                HttpResponseMessage response = await _client.PostAsync($"api/pies/{pieId}/image", form);
+                HttpResponseMessage response = await _client.PostAsync($"pies/{pieId}/image", form);
                 response.EnsureSuccessStatusCode();
+
+                return await response.Content.ReadAsStringAsync();
             }
         }
 
