@@ -1,4 +1,5 @@
 ﻿using PieShop.App.Models;
+using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json;
 
@@ -122,7 +123,19 @@ namespace PieShop.App.Services
             }
         }
 
+        public async Task UploadImage(int pieId, byte[] imageBytes)
+        {
+            using (MultipartFormDataContent form = new MultipartFormDataContent())
+            {
+                ByteArrayContent imageContent = new ByteArrayContent(imageBytes);
+                imageContent.Headers.ContentType = new MediaTypeHeaderValue("image/jpeg");
 
+                form.Add(imageContent, "image", "pie.jpg");
+
+                HttpResponseMessage response = await _client.PostAsync($"api/pies/{pieId}/image", form);
+                response.EnsureSuccessStatusCode();
+            }
+        }
 
         public async Task UpdatePie(Pie pie)
         {

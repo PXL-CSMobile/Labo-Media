@@ -8,5 +8,6 @@ namespace PieShop.App.Services
         Task UpdatePie(Pie pie);
         Task<Pie> GetPie(Guid id);
         Task<List<Pie>> GetAllPies();
+        Task UploadImage(int pieId, byte[] imageBytes);
     }
 }

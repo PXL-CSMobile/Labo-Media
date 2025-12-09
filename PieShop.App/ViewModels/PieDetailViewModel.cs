@@ -14,7 +14,7 @@ namespace PieShop.App.ViewModels
         private Pie selectedPie = new Pie();
 
         [ObservableProperty]
-        private ImageSource imagePreview;
+        private ImageSource _imagePreview;
 
         private IPieRepository _repository;
         private byte[] _photoBytes;
@@ -45,6 +45,7 @@ namespace PieShop.App.ViewModels
             if (SelectedPie.Id == Guid.Empty)
             {
                 await _repository.AddPie(SelectedPie);
+                await _repository.Upload
                 _messenger.Send(new PieCreatedMessage(SelectedPie));
             }
             else
